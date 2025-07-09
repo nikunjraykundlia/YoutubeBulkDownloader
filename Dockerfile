@@ -6,11 +6,12 @@ RUN apk add --no-cache curl
 # Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy package files and scripts directory
 COPY package*.json ./
+COPY scripts/ ./scripts/
 
-# Install dependencies
-RUN npm ci --only=production
+# Install dependencies (without postinstall script)
+RUN npm ci --only=production --ignore-scripts
 
 # Download and install yt-dlp
 RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && \
