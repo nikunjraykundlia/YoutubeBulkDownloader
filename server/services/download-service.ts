@@ -228,12 +228,22 @@ export class DownloadService {
         const localYtDlpPath = path.join(process.cwd(), 'yt-dlp');
         const distYtDlpPath = path.join(process.cwd(), 'dist', 'yt-dlp');
         
+        // On Windows, also check for .exe versions
+        const localYtDlpExePath = process.platform === 'win32' ? path.join(process.cwd(), 'yt-dlp.exe') : null;
+        const distYtDlpExePath = process.platform === 'win32' ? path.join(process.cwd(), 'dist', 'yt-dlp.exe') : null;
+        
         if (fs.existsSync(distYtDlpPath)) {
           ytdlpPath = distYtDlpPath;
           console.log('Using yt-dlp binary from dist folder in production');
+        } else if (distYtDlpExePath && fs.existsSync(distYtDlpExePath)) {
+          ytdlpPath = distYtDlpExePath;
+          console.log('Using yt-dlp.exe from dist folder in production');
         } else if (fs.existsSync(localYtDlpPath)) {
           ytdlpPath = localYtDlpPath;
           console.log('Using local yt-dlp binary in production');
+        } else if (localYtDlpExePath && fs.existsSync(localYtDlpExePath)) {
+          ytdlpPath = localYtDlpExePath;
+          console.log('Using local yt-dlp.exe in production');
         } else {
           // Fallback to system yt-dlp if local binary doesn't exist
           ytdlpPath = 'yt-dlp';
@@ -243,9 +253,14 @@ export class DownloadService {
       } else {
         // In development, prefer local binary if it exists
         const localYtDlpPath = path.join(process.cwd(), 'yt-dlp');
+        const localYtDlpExePath = process.platform === 'win32' ? path.join(process.cwd(), 'yt-dlp.exe') : null;
+        
         if (fs.existsSync(localYtDlpPath)) {
           ytdlpPath = localYtDlpPath;
           console.log('Using local yt-dlp binary in development');
+        } else if (localYtDlpExePath && fs.existsSync(localYtDlpExePath)) {
+          ytdlpPath = localYtDlpExePath;
+          console.log('Using local yt-dlp.exe in development');
         } else {
           ytdlpPath = 'yt-dlp';
           console.log('Using system yt-dlp in development (local binary not found)');
@@ -253,7 +268,25 @@ export class DownloadService {
         spawnArgs = args;
       }
       
+      // Handle Windows execution
+      if (process.platform === 'win32') {
+        // On Windows, .exe files can be executed directly
+        if (ytdlpPath.endsWith('.exe')) {
+          // .exe files can be executed directly on Windows
+          console.log('Using yt-dlp.exe directly on Windows');
+        } else if (ytdlpPath !== 'yt-dlp' && !ytdlpPath.endsWith('.exe')) {
+          // For non-.exe binaries, we need to use 'node' to execute them
+          spawnArgs = [ytdlpPath, ...args];
+          ytdlpPath = 'node';
+          console.log('Using node to execute yt-dlp on Windows');
+        } else {
+          // For system yt-dlp, try to use it directly
+          console.log('Using system yt-dlp on Windows');
+        }
+      }
+      
       console.log(`Spawning yt-dlp with path: ${ytdlpPath}`);
+      console.log(`Spawn args: ${JSON.stringify(spawnArgs)}`);
       const ytdlp = spawn(ytdlpPath, spawnArgs);
 
       let lastProgress = 0;
