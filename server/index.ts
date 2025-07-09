@@ -1,18 +1,78 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import fs from "fs-extra";
+import path from "path";
+import { spawn } from "child_process";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Health check endpoint for Render
-app.get('/health', (req: Request, res: Response) => {
-  res.status(200).json({ 
-    status: 'healthy', 
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
-  });
+app.get('/health', async (req: Request, res: Response) => {
+  try {
+    // Check if yt-dlp is available
+    let ytdlpStatus = 'unknown';
+    let ytdlpPath = '';
+    
+    // Check for yt-dlp in various locations
+    const possiblePaths = [
+      path.join(process.cwd(), 'dist', 'yt-dlp'),
+      path.join(process.cwd(), 'yt-dlp'),
+      'yt-dlp'
+    ];
+    
+    for (const testPath of possiblePaths) {
+      if (fs.existsSync(testPath)) {
+        ytdlpPath = testPath;
+        break;
+      }
+    }
+    
+    if (ytdlpPath) {
+      // Test if yt-dlp is executable
+      try {
+        const testProcess = spawn(ytdlpPath, ['--version'], { timeout: 5000 });
+        await new Promise((resolve, reject) => {
+          testProcess.on('close', (code) => {
+            if (code === 0) {
+              ytdlpStatus = 'available';
+              resolve(true);
+            } else {
+              ytdlpStatus = 'error';
+              reject(new Error(`yt-dlp exited with code ${code}`));
+            }
+          });
+          testProcess.on('error', () => {
+            ytdlpStatus = 'error';
+            reject(new Error('yt-dlp spawn failed'));
+          });
+        });
+      } catch (error) {
+        ytdlpStatus = 'error';
+      }
+    } else {
+      ytdlpStatus = 'not_found';
+    }
+    
+    res.status(200).json({ 
+      status: ytdlpStatus === 'available' ? 'healthy' : 'degraded',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      ytdlp: {
+        status: ytdlpStatus,
+        path: ytdlpPath || 'not_found'
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'unhealthy',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
 });
 
 app.use((req, res, next) => {

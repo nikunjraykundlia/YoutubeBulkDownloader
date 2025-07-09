@@ -219,20 +219,41 @@ export class DownloadService {
 
   private async attemptDownload(itemId: string, url: string, args: string[]): Promise<void> {
     return new Promise((resolve, reject) => {
-      // Use the local yt-dlp binary if it exists, otherwise fall back to system yt-dlp
+      // Determine yt-dlp path based on environment and availability
       let ytdlpPath: string;
       let spawnArgs: string[];
       
       if (process.env.NODE_ENV === 'production') {
-        // In production (Render), we need to use yt-dlp from the system
-        // Render provides yt-dlp in the system PATH
-        ytdlpPath = 'yt-dlp';
+        // In production, try to use the local yt-dlp binary first
+        const localYtDlpPath = path.join(process.cwd(), 'yt-dlp');
+        const distYtDlpPath = path.join(process.cwd(), 'dist', 'yt-dlp');
+        
+        if (fs.existsSync(distYtDlpPath)) {
+          ytdlpPath = distYtDlpPath;
+          console.log('Using yt-dlp binary from dist folder in production');
+        } else if (fs.existsSync(localYtDlpPath)) {
+          ytdlpPath = localYtDlpPath;
+          console.log('Using local yt-dlp binary in production');
+        } else {
+          // Fallback to system yt-dlp if local binary doesn't exist
+          ytdlpPath = 'yt-dlp';
+          console.log('Using system yt-dlp in production (local binary not found)');
+        }
         spawnArgs = args;
       } else {
-        ytdlpPath = 'yt-dlp';
+        // In development, prefer local binary if it exists
+        const localYtDlpPath = path.join(process.cwd(), 'yt-dlp');
+        if (fs.existsSync(localYtDlpPath)) {
+          ytdlpPath = localYtDlpPath;
+          console.log('Using local yt-dlp binary in development');
+        } else {
+          ytdlpPath = 'yt-dlp';
+          console.log('Using system yt-dlp in development (local binary not found)');
+        }
         spawnArgs = args;
       }
       
+      console.log(`Spawning yt-dlp with path: ${ytdlpPath}`);
       const ytdlp = spawn(ytdlpPath, spawnArgs);
 
       let lastProgress = 0;
@@ -359,6 +380,25 @@ export class DownloadService {
       });
 
       ytdlp.on('error', (error) => {
+        console.error(`Failed to spawn yt-dlp: ${error.message}`);
+        console.error(`yt-dlp path attempted: ${ytdlpPath}`);
+        console.error(`Current working directory: ${process.cwd()}`);
+        console.error(`Environment: ${process.env.NODE_ENV}`);
+        
+        // Check if the binary exists
+        if (fs.existsSync(ytdlpPath)) {
+          console.error(`Binary exists at ${ytdlpPath}`);
+          // Check if it's executable
+          try {
+            fs.accessSync(ytdlpPath, fs.constants.X_OK);
+            console.error('Binary is executable');
+          } catch (accessError) {
+            console.error('Binary is not executable:', accessError);
+          }
+        } else {
+          console.error(`Binary does not exist at ${ytdlpPath}`);
+        }
+        
         reject(new Error(`Failed to spawn yt-dlp: ${error.message}`));
       });
     });
