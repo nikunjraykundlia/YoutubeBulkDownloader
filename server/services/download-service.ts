@@ -434,7 +434,13 @@ export class DownloadService {
   }
 
   private isValidYouTubeUrl(url: string): boolean {
-    const youtubeRegex = /^https?:\/\/(www\.)?(youtube\.com\/shorts\/|youtu\.be\/)/;
+    // Support all YouTube URL formats:
+    // - youtube.com/watch?v=VIDEO_ID
+    // - youtube.com/shorts/VIDEO_ID
+    // - youtu.be/VIDEO_ID
+    // - youtube.com/embed/VIDEO_ID
+    // - youtube.com/v/VIDEO_ID
+    const youtubeRegex = /^https?:\/\/(www\.)?(youtube\.com\/(watch\?v=|shorts\/|embed\/|v\/)|youtu\.be\/)/;
     return youtubeRegex.test(url);
   }
 
