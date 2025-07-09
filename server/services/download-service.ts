@@ -224,14 +224,10 @@ export class DownloadService {
       let spawnArgs: string[];
       
       if (process.env.NODE_ENV === 'production') {
-        ytdlpPath = path.join(process.cwd(), 'yt-dlp');
-        // On Windows, we need to execute yt-dlp with python since it's a Python script
-        if (process.platform === 'win32') {
-          spawnArgs = [ytdlpPath, ...args];
-          ytdlpPath = 'python';
-        } else {
-          spawnArgs = args;
-        }
+        // In production (Render), we need to use yt-dlp from the system
+        // Render provides yt-dlp in the system PATH
+        ytdlpPath = 'yt-dlp';
+        spawnArgs = args;
       } else {
         ytdlpPath = 'yt-dlp';
         spawnArgs = args;

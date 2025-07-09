@@ -15,6 +15,9 @@ A beautiful, modern web app to download multiple YouTube videos in bulk with rea
 - **Individual Downloads**: Download files one by one with a modal interface.
 - **Error Handling**: Clear feedback for failed downloads or invalid URLs.
 - **Dark Mode**: Elegant, accessible color scheme with gradients.
+- **Cloud Ready**: Optimized for deployment on Render with health checks and production settings.
+- **Concurrent Downloads**: Configurable concurrency limits for optimal performance.
+- **WebSocket Updates**: Real-time progress updates without page refreshes.
 
 ---
 
@@ -24,33 +27,53 @@ A beautiful, modern web app to download multiple YouTube videos in bulk with rea
 - **Backend**: Express, TypeScript, ws (WebSocket), yt-dlp
 - **Database**: Local file storage (no DB setup required)
 - **Other**: Drizzle ORM, Zod, modern build tooling (Vite, tsx)
+- **Deployment**: Render-ready with health checks and production optimizations
 
 ---
 
 ## 🚀 Getting Started
 
-### Prerequisites
+### Option 1: Deploy to Render (Recommended)
+
+**Quick Deploy**: [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy)
+
+1. **Fork this repository** to your GitHub account
+2. **Click the "Deploy to Render" button** above
+3. **Follow the setup wizard** - Render will configure everything automatically
+4. **Your app will be live** in minutes!
+
+For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md)
+
+### Option 2: Local Development
+
+#### Prerequisites
 - [Node.js](https://nodejs.org/) (v18+ recommended)
 - [yt-dlp](https://github.com/yt-dlp/yt-dlp) installed and available in your PATH
 - (Windows) Use PowerShell or Git Bash for best compatibility
 
-### 1. Clone the Repository
+#### 1. Clone the Repository
 ```sh
 git clone https://github.com/nikunjraykundlia/YoutubeBulkDownloader.git
 cd YoutubeBulkDownloader
 ```
 
-### 2. Install Dependencies
+#### 2. Install Dependencies
 ```sh
 npm install
 ```
 
-### 3. Start the App (Development)
-#### On Windows (PowerShell):
+#### 3. Start the App (Development)
+
+**Easy Start Scripts:**
+- **Windows**: Double-click `scripts/dev.bat` or run `scripts/dev.bat`
+- **Mac/Linux**: Run `./scripts/dev.sh` (make executable first: `chmod +x scripts/dev.sh`)
+
+**Manual Start:**
+##### On Windows (PowerShell):
 ```sh
 $env:NODE_ENV="development"; npx tsx server/index.ts
 ```
-#### On Mac/Linux:
+##### On Mac/Linux:
 ```sh
 NODE_ENV=development npx tsx server/index.ts
 ```

@@ -17,6 +17,22 @@ export default function Home() {
       <div className="relative z-10 w-full">
         <Downloader />
       </div>
+      
+      {/* Footer */}
+      <div className="relative z-10 mt-16 text-center">
+        <div className="text-white/60 text-sm">
+          <p className="mb-2">
+            Built with ❤️ using React, TypeScript, and Express
+          </p>
+          <p className="flex items-center justify-center space-x-4">
+            <span>Powered by yt-dlp</span>
+            <span>•</span>
+            <span>Real-time WebSocket updates</span>
+            <span>•</span>
+            <span>Concurrent downloads</span>
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
